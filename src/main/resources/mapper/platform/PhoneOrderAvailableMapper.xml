@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.PhoneOrderAvailableMapper">
+
+
+    <update id="updateBatchByOrderNum">
+        update phone_order_available set shop_user_id = #{id} where platform_order_no in
+        <foreach collection="orderNums" open="(" close=")" item="order" separator=",">
+            #{order}
+        </foreach>
+    </update>
+    <update id="updateStatusBatchByOrderNum">
+        update phone_order_available set platform_order_status = #{platformStatus}, push_status = #{pushStatus},
+        push_num = #{pushNum} where platform_order_no in
+        <foreach collection="phoneOrderNos" open="(" close=")" item="order" separator=",">
+            #{order}
+        </foreach>
+    </update>
+    <delete id="deleteBatchOrderNos">
+        delete from phone_order_available where platform_order_no in
+        <foreach collection="orderNums" separator="," item="order" close=")" open="(">
+            #{order}
+        </foreach>
+    </delete>
+    <delete id="deleteBatchByOrderNo">
+        delete from phone_order_available
+        <where>
+            <foreach collection="platformOrderNos" index="index" item="orderNo" separator="or">
+                platform_order_no = #{orderNo}
+            </foreach>
+        </where>
+    </delete>
+    <select id="getBatchByPlatformOrderNo" resultType="com.push.entity.platform.PhoneOrderAvailable">
+        select * from phone_order_available
+        <where>
+            <foreach collection="platformOrderNos" item="orderNo" separator="or" index="index">
+                platform_order_no = #{orderNo}
+            </foreach>
+        </where>
+    </select>
+</mapper>

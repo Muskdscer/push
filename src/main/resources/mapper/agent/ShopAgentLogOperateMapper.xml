@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.agent.ShopAgentLogOperateMapper">
+
+    <select id="listShopAgentOperateLog" resultType="com.push.common.webfacade.vo.platform.OperateVO">
+        select
+        su.user_name,
+        sl.operation_type,
+        sl.operation_describe,
+        sl.operation_feedback,
+        sl.create_time,
+        sl.update_time
+        from shop_agent_log_operate sl left join shop_agent_user_info su on sl.shop_agent_user_id = su.id
+        <where>
+            <if test="username != null and username != ''">
+                su.user_name like concat ('%',#{username},'%')
+            </if>
+            <if test="startTime != null">
+                and sl.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and sl.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by sl.create_time desc
+    </select>
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.shop.ShopUserExtractionMapper">
+
+    <select id="getShopExtractionToDoList" resultType="com.push.common.webfacade.vo.platform.ShopCheckExtractionVO">
+        SELECT
+        se.id,
+        su.shop_name,se.user_mobile,se.card_user_name,se.bank_card_number,se.bank_name,se.branch_bank,se.extraction_money,
+        se.create_time
+        FROM
+        shop_user_extraction se
+        LEFT JOIN shop_user_info su ON se.shop_user_id = su.id
+        <where>
+            se.delete_flag = 0 and se.status = #{status}
+            <if test="shopUserId != null">
+                and se.shop_user_id = #{shopUserId}
+            </if>
+            <if test="shopName != null and shopName != ''">
+                and su.shop_name like concat('%',#{shopName},'%')
+            </if>
+            <if test="userMobile != null and userMobile != ''">
+                and se.user_mobile like concat('%',#{userMobile},'%')
+            </if>
+            <if test="startTime != null">
+                and se.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and se.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by se.create_time desc
+    </select>
+    <select id="getShopExtractionMoney" resultType="java.math.BigDecimal">
+        select SUM(extraction_money) from shop_user_extraction where create_time BETWEEN #{begin} and #{end}
+        <if test="status != null">
+            and status=#{status}
+        </if>
+    </select>
+
+</mapper>

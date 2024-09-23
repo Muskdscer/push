@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.upstream.UpstreamUserRechargeMapper">
+
+    <select id="getUpstreamRechargeToDoList"
+            resultType="com.push.common.webfacade.vo.platform.CheckRechargeVO">
+        SELECT
+        ur.id,uu.upstream_name,ur.order_no,uu.phone_number userMobile, ur.money,ur.create_time,ur.update_time
+        FROM
+        upstream_user_recharge ur
+        LEFT JOIN upstream_user_info uu ON ur.upstream_user_id = uu.id
+        <where>
+            ur.delete_flag = 0 and ur.status = #{status}
+            <if test="upstreamUserId != null">
+                and ur.upstream_user_id = #{upstreamUserId}
+            </if>
+            <if test="upstreamName != null and upstreamName != ''">
+                and uu.upstream_name like concat('%',#{upstreamName},'%')
+            </if>
+            <if test="userMobile != null and userMobile != ''">
+                and uu.phone_number = #{userMobile}
+            </if>
+            <if test="startTime != null">
+                and ur.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and ur.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by ur.create_time desc
+    </select>
+    <select id="getUpstreamRechargeMoney" resultType="java.math.BigDecimal">
+        select SUM(money) from upstream_user_recharge where create_time BETWEEN #{begin} and #{end}
+        <if test="status != null">
+            and status=#{status}
+        </if>
+    </select>
+</mapper>

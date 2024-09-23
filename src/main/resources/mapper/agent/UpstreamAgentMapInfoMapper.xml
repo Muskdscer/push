@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.agent.UpstreamAgentMapInfoMapper">
+
+    <select id="pageWithUpstream" resultType="com.push.common.webfacade.vo.platform.UpstreamAgentMapInfoVO">
+        select
+        ua.id,
+        uu.upstream_name,
+        uu.phone_number,
+        ua.rate,
+        ua.create_time,
+        ua.update_time
+        from upstream_agent_map_info ua left join upstream_user_info uu on ua.upstream_id = uu.id
+        where ua.delete_flag = #{code} and ua.agent_id=#{agentId}
+        order by ua.create_time desc
+    </select>
+</mapper>

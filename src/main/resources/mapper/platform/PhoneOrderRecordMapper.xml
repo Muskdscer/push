@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.PhoneOrderRecordMapper">
+
+    <update id="updateBatchByOrderNum">
+        update phone_order_record set shop_user_id = #{id} , platform_order_status = #{status} where platform_order_no
+        in
+        <foreach collection="orderNums" open="(" close=")" item="order" separator=",">
+            #{order}
+        </foreach>
+    </update>
+    <update id="updateBatchByOrderNo">
+        update phone_order_record a
+        INNER JOIN(
+        <foreach collection="orderVOs" separator="UNION" item="vo" index="index">
+            select #{vo.orderSn} as order_sn,
+            #{vo.shopOrderNo} as shop_order_no,
+            #{vo.platformOrderNo} as platform_order_no
+        </foreach>
+        ) b using(platform_order_no)
+        <set>a.shop_callback_status = 1,
+            a.platform_order_status = 2,
+            a.platform_bill_status = 1,
+            a.shop_bill_status = 1,
+            a.upstream_bill_status = 1,
+            a.up_back_num = 1,
+            a.order_sn = b.order_sn,
+            a.shop_order_no = IFNULL(b.shop_order_no, a.shop_order_no)
+        </set>
+    </update>
+    <update id="updateStatusBatchByOrderNum">
+        update phone_order_record set platform_order_status = #{platformStatus}, push_status = #{pushStatus}, push_num =
+        #{pushNum} where
+        platform_order_no in
+        <foreach collection="phoneOrderNos" open="(" close=")" item="order" separator=",">
+            #{order}
+        </foreach>
+    </update>
+    <update id="updateByOrderNo">
+        update phone_order_record
+        set upstream_callback_status = 1
+        where
+        <foreach collection="orderNoList" index="index" item="orderNo" separator="or">
+            platform_order_no = #{orderNo}
+        </foreach>
+    </update>
+    <update id="updateBatchByPlatformOrderNo">
+        update phone_order_record
+        set query_num = 1,up_back_num=1
+        <where>
+            <foreach collection="records" index="index" item="record" separator="or">
+                platform_order_no = #{record.platformOrderNo}
+            </foreach>
+        </where>
+    </update>
+    <update id="batchUpdateShopOrderNoByPlatformOrderNo">
+        update phone_order_record a
+        inner join (
+        <foreach collection="list" item="item" index="index" separator=" union ">
+            select #{item.platformOrderNo} as platform_order_no,
+            #{item.shopOrderNo} as shop_order_no
+        </foreach>
+        ) b using(platform_order_no)
+        set a.shop_order_no = b.shop_order_no
+    </update>
+    <update id="updateBatchOrderFailById">
+        update phone_order_record a
+        inner join (
+        <foreach collection="records" item="item" index="index" separator=" union ">
+            select #{item.id} as id,
+            #{item.shopOrderNo} as shop_order_no,
+            #{item.shopCallbackStatus} as shop_callback_status,
+            #{item.platformOrderStatus} as platform_order_status,
+            #{item.shopBillStatus} as shop_bill_status,
+            #{item.platformBillStatus} as platform_bill_status,
+            #{item.upstreamBillStatus} as upstream_bill_status
+        </foreach>
+        ) b using(id)
+        <set>
+            a.shop_order_no = b.shop_order_no,
+            a.shop_callback_status = b.shop_callback_status,
+            a.platform_order_status = b.platform_order_status,
+            a.shop_bill_status = b.shop_bill_status,
+            a.platform_bill_status = b.platform_bill_status,
+            a.upstream_bill_status = b.upstream_bill_status
+        </set>
+    </update>
+    <select id="getStatisticShop"
+            resultType="com.push.common.webfacade.vo.platform.StatisticShopCallbackVO">
+        SELECT su.user_name           AS shopUserName,
+               count(pr.shop_user_id) AS waitCallbackNo,
+               su.alarm_number
+        FROM shop_user_info su
+                 LEFT JOIN phone_order_record pr ON pr.shop_user_id = su.id
+        WHERE ISNULL(pr.shop_callback_status)
+          and pr.platform_order_status != -1
+        GROUP BY pr.shop_user_id
+    </select>
+    <select id="getStatisticUpstream"
+            resultType="com.push.common.webfacade.vo.platform.StatisticUpstreamCallbackVO">
+        SELECT uu.user_name               AS upstreamUserName,
+               count(pr.upstream_user_id) AS waitCallbackNo,
+               uu.alarm_number
+        FROM upstream_user_info uu
+                 LEFT JOIN phone_order_record pr ON pr.upstream_user_id = uu.id
+        WHERE ISNULL(pr.upstream_callback_status)
+        GROUP BY pr.upstream_user_id
+    </select>
+    <select id="getDealMoney" resultType="java.math.BigDecimal">
+        SELECT SUM(order_price) from phone_order_record where create_time BETWEEN #{begin} and #{end}
+        <if test="platformOrderStatus != null">
+            and platform_order_status=#{platformOrderStatus}
+        </if>
+    </select>
+    <select id="getDealFailMoney" resultType="java.math.BigDecimal">
+        SELECT SUM(order_price)
+        from phone_order_record
+        where (platform_order_status = #{platformOrderStatus3} or platform_order_status = #{platformOrderStatus4})
+          and create_time BETWEEN #{begin} and #{end}
+    </select>
+    <select id="listByShopIds" resultType="com.push.common.webfacade.vo.platform.PhoneOrderRecordVO">
+        select *
+        from phone_order_record
+        <where>
+            <if test="upstreamOrderNo != null and upstreamOrderNo != ''">
+                and phone_order_record.upstream_order_no like concat('%',#{upstreamOrderNo},'%')
+            </if>
+            <if test="shopOrderNo != null and shopOrderNo != ''">
+                and phone_order_record.shop_order_no like concat('%',#{shopOrderNo},'%')
+            </if>
+            <if test="platformOrderNo != null and platformOrderNo != ''">
+                and phone_order_record.platform_order_no like concat('%',#{platformOrderNo},'%')
+            </if>
+            <if test="startTime != null">
+                and phone_order_record.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and phone_order_record.create_time &lt; #{endTime}
+            </if>
+            <if test="phoneNum != null and phoneNum != ''">
+                and phone_order_record.phone_num = #{phoneNum}
+            </if>
+            <if test="phoneOperator != null and phoneOperator != ''">
+                and phone_order_record.phone_operator = #{phoneOperator}
+            </if>
+            <if test="platformOrderStatus != null">
+                and phone_order_record.platform_order_status = #{platformOrderStatus}
+            </if>
+            and shop_user_id in
+            <foreach collection="ids" open="(" close=")" item="id" separator=",">
+                #{id}
+            </foreach>
+        </where>
+    </select>
+    <select id="listByUpstreamIds" resultType="com.push.common.webfacade.vo.platform.PhoneOrderRecordVO">
+        select *
+        from phone_order_record
+        <where>
+            <if test="upstreamOrderNo != null and upstreamOrderNo != ''">
+                and phone_order_record.upstream_order_no like concat('%',#{upstreamOrderNo},'%')
+            </if>
+            <if test="shopOrderNo != null and shopOrderNo != ''">
+                and phone_order_record.shop_order_no like concat('%',#{shopOrderNo},'%')
+            </if>
+            <if test="platformOrderNo != null and platformOrderNo != ''">
+                and phone_order_record.platform_order_no like concat('%',#{platformOrderNo},'%')
+            </if>
+            <if test="startTime != null">
+                and phone_order_record.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and phone_order_record.create_time &lt; #{endTime}
+            </if>
+            <if test="phoneNum != null and phoneNum != ''">
+                and phone_order_record.phone_num = #{phoneNum}
+            </if>
+            <if test="phoneOperator != null and phoneOperator != ''">
+                and phone_order_record.phone_operator = #{phoneOperator}
+            </if>
+            <if test="platformOrderStatus != null">
+                and phone_order_record.platform_order_status = #{platformOrderStatus}
+            </if>
+            and upstream_user_id in
+            <foreach collection="ids" open="(" close=")" item="id" separator=",">
+                #{id}
+            </foreach>
+        </where>
+    </select>
+    <select id="getStatisticUpstreamCallBackFail"
+            resultType="com.push.common.webfacade.vo.platform.statistics.StatisticUpstreamCallbackFailVO">
+        SELECT uu.user_name               AS upstreamUserName,
+               count(pr.upstream_user_id) AS waitCallbackNo,
+               uu.alarm_number
+        FROM upstream_user_info uu
+                 LEFT JOIN phone_order_record pr ON pr.upstream_user_id = uu.id
+        WHERE pr.up_back_num = 3
+        GROUP BY pr.upstream_user_id
+    </select>
+    <select id="selectUpstreamUserInfoByPlatformOrderNo" resultType="com.push.entity.upstream.UpstreamUserInfo">
+        select upi.*
+        from phone_order_record poa
+                 left join upstream_user_info upi on poa.upstream_user_id = upi.id
+        where poa.platform_order_no = #{platformOrderNo}
+    </select>
+    <select id="getOrderBatchByOrderNo" resultType="com.push.entity.platform.PhoneOrderRecord">
+        select * from phone_order_record
+        <where>
+            <foreach collection="platformOrderNos" index="index" item="orderNo" separator="or">
+                platform_order_no = #{orderNo}
+            </foreach>
+        </where>
+    </select>
+    <select id="getBatchByPlatformOrderNo" resultType="com.push.entity.platform.PhoneOrderRecord">
+        select * from phone_order_record
+        <where>
+            <foreach collection="platformOrderNos" item="orderNo" separator="or" index="index">
+                platform_order_no = #{orderNo}
+            </foreach>
+        </where>
+    </select>
+    <select id="getSumOrderCount" resultType="com.push.common.webfacade.vo.platform.UpOrderCountGroupVO">
+        SELECT count(1) orderCount, sum(order_price * ${rate}) orderPrice, upstream_callback_status
+        FROM `phone_order_record`
+        GROUP BY upstream_user_id, upstream_callback_status
+        HAVING phone_order_record.upstream_user_id = #{upstreamUserId}
+    </select>
+    <select id="getSumOrderCountToShop"
+            resultType="com.push.common.webfacade.vo.platform.DownOrderCountGroupVO">
+        SELECT shop_name name, count(1) orderCount, sum(shop_price) orderPrice, shop_callback_status
+        FROM `phone_order_record`
+        WHERE create_time >= #{startTime}
+          and create_time &lt;= #{endTime}
+        GROUP BY shop_user_id, shop_callback_status, shop_user_id
+    </select>
+</mapper>

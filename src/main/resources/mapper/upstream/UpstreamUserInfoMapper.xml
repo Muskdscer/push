@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.upstream.UpstreamUserMapper">
+
+    <sql id="baseSQL">
+        uu.id,
+        uu.user_name,
+        uu.password,
+        uu.upstream_name,
+        uu.frozen_money,
+        uu.alarm_number,
+        uu.phone_number,
+        uu.area_code,
+        uu.white_ip,
+        uu.rate,
+        uu.balance,
+        uu.frozen_money,
+        uu.alarm_number,
+        uu.bank_card_number,
+        uu.bank_name,
+        uu.branch_bank,
+        uu.card_name,
+        uu.push_site,
+        uu.push_num,
+        uu.app_id,
+        uu.role_id,
+        uu.app_key,
+        uu.status,
+        uu.create_time,
+        uu.update_time,
+        sm.name,
+        sm.id as matchClassifyId
+    </sql>
+    <select id="getOneWithMatchClassify" resultType="com.push.common.webfacade.vo.platform.UpstreamUserInfoVO">
+        select
+        <include refid="baseSQL"/>
+        from upstream_user_info uu left join shop_match_classify sm on uu.match_classify_id = sm.id
+        where uu.id = #{id} and uu.delete_flag = #{code}
+    </select>
+    <select id="listUpstream" resultType="com.push.common.webfacade.vo.platform.UpstreamUserInfoVO">
+        select
+        <include refid="baseSQL"/>
+        from upstream_user_info uu left join shop_match_classify sm on uu.match_classify_id = sm.id
+        <where>
+            uu.delete_flag = 0
+            <if test="userName != null and userName != ''">
+                and uu.user_name like concat ('%',#{userName},'%')
+            </if>
+            <if test="upstreamName != null and upstreamName != ''">
+                and uu.upstream_name like concat ('%',#{upstreamName},'%')
+            </if>
+            <if test="matchClassifyId != null">
+                and uu.match_classify_id = #{matchClassifyId}
+            </if>
+            <if test="phoneNumber != null and phoneNumber != ''">
+                and uu.phone_number like concat ('%',#{phoneNumber},'%')
+            </if>
+            <if test="startTime != null">
+                and uu.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and uu.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by uu.create_time desc
+    </select>
+    <select id="listAllUpstream" resultType="com.push.common.webfacade.vo.platform.ListUpstreamUserInfoVO">
+        select
+        id,
+        upstream_name
+        from upstream_user_info
+        order by create_time desc
+    </select>
+</mapper>

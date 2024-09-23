@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.agent.ShopAgentMapInfoMapper">
+
+
+	<select id="getShopAgentMap" resultType="com.push.common.webfacade.vo.platform.ShopAgentMapVO">
+		SELECT
+		sa.id as mapId,
+		su.id as shopId,
+		su.shop_name,
+		su.phone_number,
+		sa.rate,
+		su.create_time,
+		su.update_time
+		FROM
+		shop_agent_map_info sa
+		LEFT JOIN shop_user_info su ON sa.shop_id = su.id
+		WHERE
+		sa.agent_id = #{id} and sa.delete_flag=0
+	</select>
+</mapper>

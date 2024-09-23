@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.shop.ShopBillInfoMapper">
+    <insert id="saveBatch">
+        insert into shop_bill_info(trader_user_id,trade_no
+        ,`type`,money,balance,last_balance,last_time,status)
+        values
+        <foreach collection="shopBillInfos" index="index" separator="," item="cp">
+            (#{cp.traderUserId},#{cp.tradeNo},#{cp.type},
+            #{cp.money},#{cp.balance},#{cp.lastBalance},
+            #{cp.lastTime},#{cp.status})
+        </foreach>
+    </insert>
+
+    <select id="listPlatformBill" resultType="com.push.common.webfacade.vo.platform.ShopBillInfoVO">
+        select
+        sb.id id,
+        sb.balance,
+        sb.last_balance,
+        sb.last_time,
+        sb.froze_money,
+        sb.wait_money,
+        sb.trade_no tradeNo,
+        sb.type type,
+        sb.money money,
+        sb.status status,
+        sb.create_time create_time,
+        sb.update_time,
+        su.user_name user_name
+        from shop_bill_info sb left join shop_user_info su on sb.trader_user_id = su.id
+        <where>
+            <if test="bo.shopUserId != null">
+                and sb.trader_user_id = #{bo.shopUserId}
+            </if>
+            <if test="bo.userName != null and bo.userName != ''">
+                and su.user_name like concat('%',#{bo.userName},'%')
+            </if>
+            <if test="bo.tradeNo != null and bo.tradeNo!= ''">
+                and sb.trade_no = #{bo.tradeNo}
+            </if>
+            <if test="bo.startTime != null">
+                and #{bo.startTime} &lt;= sb.create_time
+            </if>
+            <if test="bo.endTime != null">
+                and #{bo.endTime} &gt; sb.create_time
+            </if>
+            <if test="bo.type != null">
+                and sb.type = #{bo.type}
+            </if>
+            <if test="bo.status != null">
+                and sb.status = #{bo.status}
+            </if>
+        </where>
+        order by sb.create_time desc
+    </select>
+    <select id="getExportField" resultType="com.push.common.webfacade.vo.platform.ExportShopBillVO">
+        SELECT
+        sb.trade_no,
+        sb.type,
+        sb.money,
+        sb.`status`,
+        sb.create_time,
+        sb.update_time,
+        su.user_name
+        FROM
+        shop_bill_info sb
+        LEFT JOIN shop_user_info su ON sb.trader_user_id = su.id
+        <if test="bo != null">
+            <where>
+                <if test="bo.id != null">
+                    sb.id = #{bo.id}
+                </if>
+                <if test="bo.userName != null and bo.userName != ''">
+                    and su.user_name like concat('%',#{bo.userName},'%')
+                </if>
+                <if test="bo.tradeNo != null and bo.tradeNo != ''">
+                    and sb.trade_no = #{bo.tradeNo}
+                </if>
+                <if test="bo.startTime != null">
+                    and sb.create_time &gt;= #{bo.startTime}
+                </if>
+                <if test="bo.endTime != null">
+                    and sb.create_time &lt;= #{bo.endTime}
+                </if>
+            </where>
+        </if>
+        limit #{pageNo}, #{pageSize}
+    </select>
+    <select id="shopBillStatistics"
+            resultType="com.push.common.webfacade.vo.platform.ListBillAllTypeStatisticsVO">
+            SELECT
+    	        sb.type,
+    	        sum( sb.money ) AS billStatisticsMoney
+            FROM
+    	        shop_bill_info sb left join shop_user_info su on sb.trader_user_id = su.id
+        <where>
+            <if test="bo.shopUserId != null">
+                and sb.trader_user_id = #{bo.shopUserId}
+            </if>
+            <if test="bo.userName != null and bo.userName != ''">
+                and su.user_name like concat('%',#{bo.userName},'%')
+            </if>
+            <if test="bo.tradeNo != null and bo.tradeNo!= ''">
+                and sb.trade_no = #{bo.tradeNo}
+            </if>
+            <if test="bo.startTime != null">
+                and #{bo.startTime} &lt;= sb.create_time
+            </if>
+            <if test="bo.endTime != null">
+                and #{bo.endTime} &gt; sb.create_time
+            </if>
+            <if test="bo.type != null">
+                and sb.type = #{bo.type}
+            </if>
+            <if test="bo.status != null">
+                and sb.status = #{bo.status}
+            </if>
+        </where>
+            GROUP BY
+    	    sb.type
+    </select>
+</mapper>

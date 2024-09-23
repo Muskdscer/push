@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.PlatformBillInfoMapper">
+
+    <resultMap id="baseMap" type="com.push.common.webfacade.vo.platform.PlatformBillInfoVO">
+        <id column="id" property="id"/>
+        <result column="user_name" property="userName"/>
+        <result column="trade" property="tradeNo"/>
+        <result column="type" property="type"/>
+        <result column="money" property="money"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    <insert id="saveBatch">
+        insert into platform_bill_info(trade_no
+        ,`type`,money,balance,last_balance,last_time,status)
+        values
+        <foreach collection="platformBillInfos" index="index" separator="," item="cp">
+            (#{cp.tradeNo},#{cp.type},
+            #{cp.money},#{cp.balance},#{cp.lastBalance},
+            #{cp.lastTime},#{cp.status})
+        </foreach>
+    </insert>
+
+    <select id="listPlatformBill" resultType="com.push.common.webfacade.vo.platform.PlatformBillInfoVO">
+        select
+        pb.id id,
+        pb.balance,
+        pb.last_balance,
+        pb.last_time,
+        pb.froze_money,
+        pb.wait_money,
+        pb.trade_no,
+        pb.type type,
+        pb.money money,
+        pb.status status,
+        pb.create_time create_time,
+        pb.update_time,
+        pu.user_name user_name
+        from platform_bill_info pb left join platform_user_info pu on pb.trader_user_id = pu.id
+        <where>
+            <if test="bo.userName != null and bo.userName != ''">
+                pu.user_name like concat('%',#{bo.userName},'%')
+            </if>
+            <if test="bo.startTime != null">
+                and pb.create_time >= #{bo.startTime}
+            </if>
+            <if test="bo.endTime != null">
+                and pb.create_time &lt;= #{bo.endTime}
+            </if>
+            <if test="bo.tradeNo != null and bo.tradeNo != null">
+                and pb.trade_no = #{bo.tradeNo}
+            </if>
+            <if test="bo.type != null">
+                and pb.type = #{bo.type}
+            </if>
+            <if test="bo.status != null">
+                and pb.status = #{bo.status}
+            </if>
+        </where>
+        order by pb.create_time desc
+    </select>
+    <select id="getExportField" resultType="com.push.common.webfacade.vo.platform.ExportPlatformBillVO">
+        SELECT
+        pb.trade_no,
+        pb.type,
+        pb.money,
+        pb.`status`,
+        pb.create_time,
+        pb.update_time,
+        pu.user_name
+        FROM
+        platform_bill_info pb
+        LEFT JOIN platform_user_info pu ON pb.trader_user_id = pu.id
+        <if test="bo != null">
+            <where>
+                <if test="bo.userName != null and bo.userName != ''">
+                    and pu.user_name like concat('%',#{bo.userName},'%')
+                </if>
+                <if test="bo.tradeNo != null and bo.tradeNo != ''">
+                    and pb.trade_no = #{bo.tradeNo}
+                </if>
+                <if test="bo.startTime != null">
+                    and pb.create_time &gt;= #{bo.startTime}
+                </if>
+                <if test="bo.endTime != null">
+                    and pb.create_time &lt;= #{bo.endTime}
+                </if>
+            </where>
+        </if>
+        limit #{pageNo}, #{pageSize}
+    </select>
+    <select id="platformBillStatistics"
+            resultType="com.push.common.webfacade.vo.platform.ListBillAllTypeStatisticsVO">
+        SELECT
+        pb.type,
+	    sum( pb.money ) AS billStatisticsMoney
+        FROM platform_bill_info pb left join platform_user_info pu on pb.trader_user_id = pu.id
+        <where>
+            <if test="bo.userName != null and bo.userName != ''">
+                pu.user_name like concat('%',#{bo.userName},'%')
+            </if>
+            <if test="bo.startTime != null and bo.endTime == null">
+                and #{bo.startTime} &gt;= pb.create_time
+            </if>
+            <if test="bo.startTime == null and bo.endTime != null">
+                and #{bo.endTime} &lt;= pb.create_time
+            </if>
+            <if test="bo.startTime != null and bo.endTime != null">
+                and pb.create_time &lt;= #{bo.endTime} and pb.create_time &gt;= #{bo.startTime}
+            </if>
+            <if test="bo.tradeNo != null and bo.tradeNo != null">
+                and pb.trade_no = #{bo.tradeNo}
+            </if>
+            <if test="bo.type != null">
+                and pb.type = #{bo.type}
+            </if>
+            <if test="bo.status != null">
+                and pb.status = #{bo.status}
+            </if>
+        </where>
+        GROUP BY
+            pb.type
+    </select>
+</mapper>

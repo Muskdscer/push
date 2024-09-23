@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.CpTpPhoneOrderCallBackMapper">
+    <insert id="saveBatch">
+        insert into cp_tp_phone_order_call_back(platform_order_no,shop_order_no,order_sn,status)
+        values
+        <foreach collection="cpTpList" index="index" separator="," item="tp">
+            (#{tp.platformOrderNo},#{tp.shopOrderNo},#{tp.orderSn},
+            #{tp.status})
+        </foreach>
+    </insert>
+    <insert id="saveBatchShopOrderNoIsNull">
+        insert into cp_tp_phone_order_call_back(platform_order_no,status)
+        values
+        <foreach collection="cpTpListShopOrderNoIsNull" index="index" separator="," item="tp">
+            (#{tp.platformOrderNo},
+            #{tp.status})
+        </foreach>
+    </insert>
+
+    <delete id="deleteBatchByOrderNo">
+        delete from cp_tp_phone_order_call_back
+        <where>
+            <foreach collection="ids" index="index" item="id" separator="or">
+                id = #{id}
+            </foreach>
+        </where>
+    </delete>
+    <delete id="deleteBatchOrder">
+        delete from cp_tp_phone_order_call_back
+        <where>
+            <foreach collection="finalStatusCpTpOrderNo" index="index" item="orderNo" separator="or">
+                platform_order_no = #{orderNo}
+            </foreach>
+        </where>
+    </delete>
+</mapper>

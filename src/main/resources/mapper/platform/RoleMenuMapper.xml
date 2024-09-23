@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.RoleMenuMapper">
+
+    <insert id="batchInsert">
+        insert into role_menu(role_id, menu_id)
+        values
+        <foreach collection="roleMenuList" item="item" index="index" separator=",">
+            (#{item.roleId}, #{item.menuId})
+        </foreach>
+    </insert>
+    <select id="selectMenuByRoleId" resultType="com.push.entity.platform.MenuInfo">
+        SELECT m.*
+        FROM role_menu rm
+                 left join menu_info m on rm.menu_id = m.id
+        WHERE rm.role_id = #{roleId}
+    </select>
+</mapper>

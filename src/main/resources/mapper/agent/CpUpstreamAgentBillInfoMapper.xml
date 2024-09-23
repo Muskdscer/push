@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.agent.CpUpstreamAgentBillInfoMapper">
+
+    <insert id="saveBatch">
+        insert into cp_upstream_agent_bill_info(trader_user_id,trade_no
+        ,`type`, aisle_id, operator, money,balance,last_balance,last_time,status,map_user_id)
+        values
+        <foreach collection="cpUpstreamAgentBillInfos" index="index" separator="," item="cp">
+            (#{cp.traderUserId},#{cp.tradeNo},#{cp.type}, #{cp.aisleId}, #{cp.operator},
+            #{cp.money},#{cp.balance},#{cp.lastBalance},
+            #{cp.lastTime},#{cp.status},#{cp.mapUserId})
+        </foreach>
+    </insert>
+</mapper>

@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.upstream.UpstreamBillInfoMapper">
+    <insert id="saveBatch">
+        insert into upstream_bill_info(trader_user_id,trade_no
+        ,`type`, aisle_id, operator, money,balance,last_balance,last_time,status)
+        values
+        <foreach collection="upstreamBillInfos" index="index" separator="," item="cp">
+            (#{cp.traderUserId},#{cp.tradeNo},#{cp.type}, #{cp.aisleId}, #{cp.operator},
+            #{cp.money},#{cp.balance},#{cp.lastBalance},
+            #{cp.lastTime},#{cp.status})
+        </foreach>
+    </insert>
+
+    <select id="listPlatformBill" resultType="com.push.common.webfacade.vo.platform.UpstreamBillInfoVO">
+        select
+        ub.id id,
+        ub.balance,
+        ub.last_balance,
+        ub.last_time,
+        ub.froze_money,
+        ub.wait_money,
+        ub.trade_no tradeNo,
+        ub.type type,
+        ub.money money,
+        ub.status status,
+        ub.create_time create_time,
+        ub.update_time,
+        uu.user_name user_name
+        from upstream_bill_info ub left join upstream_user_info uu on ub.trader_user_id = uu.id
+        <where>
+            <if test="bo.upstreamUserId != null">
+                and ub.trader_user_id = #{bo.upstreamUserId}
+            </if>
+            <if test="bo.userName != null and bo.userName != ''">
+                and uu.user_name like concat('%',#{bo.userName},'%')
+            </if>
+            <if test="bo.tradeNo != null and bo.tradeNo!= ''">
+                and ub.trade_no = #{bo.tradeNo}
+            </if>
+            <if test="bo.startTime != null">
+                and #{bo.startTime} &lt;=ub.create_time
+            </if>
+            <if test="bo.endTime != null">
+                and #{bo.endTime} &gt;=  ub.create_time
+            </if>
+            <if test="bo.type != null">
+                and ub.type = #{bo.type}
+            </if>
+            <if test="bo.status != null">
+                and ub.status = #{bo.status}
+            </if>
+        </where>
+        order by ub.create_time desc
+    </select>
+    <select id="getExportField" resultType="com.push.common.webfacade.vo.platform.ExportUpstreamBillVO">
+        SELECT
+        ub.trade_no,
+        ub.type,
+        ub.money,
+        ub.`status`,
+        ub.create_time,
+        ub.update_time,
+        uu.user_name
+        FROM
+        upstream_bill_info ub
+        LEFT JOIN upstream_user_info uu ON ub.trader_user_id = uu.id
+        <if test="bo != null">
+            <where>
+                <if test="bo.id != null">
+                    ub.id = #{bo.id}
+                </if>
+                <if test="bo.userName != null and bo.userName != ''">
+                    and uu.user_name like concat('%',#{bo.userName},'%')
+                </if>
+                <if test="bo.tradeNo != null and bo.tradeNo != ''">
+                    and ub.trade_no = #{bo.tradeNo}
+                </if>
+                <if test="bo.startTime != null">
+                    and ub.create_time &gt;= #{bo.startTime}
+                </if>
+                <if test="bo.endTime != null">
+                    and ub.create_time &lt;= #{bo.endTime}
+                </if>
+            </where>
+        </if>
+        limit #{pageNo}, #{pageSize}
+    </select>
+    <select id="upstreamBillStatistics"
+            resultType="com.push.common.webfacade.vo.platform.ListBillAllTypeStatisticsVO">
+                SELECT
+                    ub.type,
+                	sum( ub.money ) AS billStatisticsMoney
+                FROM
+                	upstream_bill_info  ub left join upstream_user_info uu on ub.trader_user_id = uu.id
+        <where>
+            <if test="bo.upstreamUserId != null">
+                and ub.trader_user_id = #{bo.upstreamUserId}
+            </if>
+            <if test="bo.userName != null and bo.userName != ''">
+                and uu.user_name like concat('%',#{bo.userName},'%')
+            </if>
+            <if test="bo.tradeNo != null and bo.tradeNo!= ''">
+                and ub.trade_no = #{bo.tradeNo}
+            </if>
+            <if test="bo.startTime != null">
+                and #{bo.startTime} &lt;=ub.create_time
+            </if>
+            <if test="bo.endTime != null">
+                and #{bo.endTime} &gt;=  ub.create_time
+            </if>
+            <if test="bo.type != null">
+                and ub.type = #{bo.type}
+            </if>
+            <if test="bo.status != null">
+                and ub.status = #{bo.status}
+            </if>
+        </where>
+                GROUP BY
+                 ub.type
+    </select>
+</mapper>

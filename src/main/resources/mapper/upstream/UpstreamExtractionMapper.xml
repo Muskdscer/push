@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.upstream.UpstreamExtractionMapper">
+
+    <select id="getUpstreamExtractionToDoList"
+            resultType="com.push.common.webfacade.vo.platform.UpstreamCheckExtractionVO">
+        SELECT
+        ue.id id,
+        uu.upstream_name,ue.user_mobile,ue.card_user_name,ue.bank_card_number,ue.bank_name,ue.branch_bank,ue.extraction_money,ue.create_time
+        createTime
+        FROM
+        upstream_extraction ue
+        LEFT JOIN upstream_user_info uu ON ue.upstream_user_id = uu.id
+        <where>
+            ue.delete_flag = 0 and ue.status = #{status}
+            <if test="upstreamUserId != null">
+                and ue.upstream_user_id = #{upstreamUserId}
+            </if>
+            <if test="upstreamName != null and upstreamName != ''">
+                and uu.upstream_name like concat('%',#{upstreamName},'%')
+            </if>
+            <if test="userMobile != null and userMobile != ''">
+                and ue.user_mobile like concat('%',#{userMobile},'%')
+            </if>
+            <if test="startTime != null">
+                and ue.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and ue.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by ue.create_time desc
+    </select>
+    <select id="getUpstreamExtractionMoney" resultType="java.math.BigDecimal">
+        select SUM(extraction_money) from upstream_extraction where create_time BETWEEN #{begin} and #{end}
+        <if test="status != null">
+            and status=#{status}
+        </if>
+    </select>
+
+</mapper>

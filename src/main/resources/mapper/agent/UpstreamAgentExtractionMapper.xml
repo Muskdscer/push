@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.agent.UpstreamAgentExtractionMapper">
+
+    <select id="passCheckList"
+            resultType="com.push.common.webfacade.vo.platform.AgentPassCheckExtractionVO">
+        select
+        ae.id,
+        ui.upstream_name,
+        ae.user_mobile,
+        ae.card_user_name,
+        ae.bank_card_number,
+        ae.bank_name,
+        ae.branch_bank,
+        ae.extraction_money,
+        ae.create_time
+        from upstream_agent_extraction ae left join upstream_agent_user_info ui on ae.upstream_agent_user_id = ui.id
+        <where>
+                ae.status = #{code}
+            <if test="phoneNumber != null and phoneNumber != ''">
+                and ui.phone_number like concat('%',#{phoneNumber},'%')
+            </if>
+            <if test="upstreamName != null and upstreamName != ''">
+                and ui.upstream_name like concat('%',#{upstreamName},'%')
+            </if>
+            <if test="startTime != null">
+                and ae.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and ae.create_time &lt; #{endTime}
+            </if>
+            <if test="userId != null">
+                and ae.upstream_agent_user_id = #{userId}
+            </if>
+        </where>
+        order by ae.create_time desc
+    </select>
+    <select id="passSuAndFaCheckList"
+            resultType="com.push.common.webfacade.vo.platform.AgentSuAndFaPassCheckExtractionVO">
+        select
+        ae.id,
+        ui.upstream_name,
+        ae.user_mobile,
+        ae.card_user_name,
+        ae.bank_card_number,
+        ae.bank_name,
+        ae.branch_bank,
+        ae.extraction_money,
+        ae.create_time
+        from upstream_agent_extraction ae left join upstream_agent_user_info ui on ae.upstream_agent_user_id = ui.id
+        <where>
+            ae.status = #{code}
+            <if test="phoneNumber != null and phoneNumber != ''">
+                and ui.phone_number like concat('%',#{phoneNumber},'%')
+            </if>
+            <if test="upstreamName != null and upstreamName != ''">
+                and ui.upstream_name like concat('%',#{upstreamName},'%')
+            </if>
+            <if test="startTime != null">
+                and #{startTime} &lt;= ae.create_time
+            </if>
+            <if test="endTime != null">
+                and #{endTime} &gt; ae.create_time
+            </if>
+            <if test="userId != null">
+                and ae.upstream_agent_user_id = #{userId}
+            </if>
+        </where>
+        order by ae.create_time desc
+    </select>
+    <select id="getUpstreamAgentExtractionMoney" resultType="java.math.BigDecimal">
+        select SUM(extraction_money) from upstream_agent_extraction where create_time BETWEEN #{begin} and #{end}
+        <if test="status != null">
+            and status=#{status}
+        </if>
+    </select>
+</mapper>

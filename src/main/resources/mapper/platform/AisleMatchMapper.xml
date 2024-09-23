@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.AisleMatchMapper">
+
+    <select id="selectShopIds" resultType="java.lang.Long">
+        SELECT
+	    su.id
+        FROM
+	    aisle_match am
+	    LEFT JOIN shop_user_info su ON am.shop_id = su.id
+        WHERE
+	    am.aisle_classify_id = #{aisleClassifyId}
+	    AND am.delete_flag = #{code}
+	    AND su.`status` = #{value}
+    </select>
+</mapper>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.shop.ShopPushMatchMapper">
+
+    <select id="selectListWithShopName" resultType="com.push.common.webfacade.vo.platform.ShopPushMatchVO">
+        select spm.id,
+               spm.start,
+               spm.end,
+               spm.match_num,
+               spm.create_time,
+               spm.update_time,
+               sui.shop_name,
+               spm.shop_id,
+               spm.money
+        from shop_push_match spm
+                 left join shop_user_info sui on spm.shop_id = sui.id
+        where spm.operator_type = #{operatorType}
+          and spm.delete_flag = 0
+          and spm.money = #{money}
+          and spm.match_classify_id = #{matchClassifyId}
+    </select>
+    <select id="selectByShopIds" resultType="com.push.entity.shop.ShopPushMatch">
+        select * from shop_push_match
+        where aisle_classify_id = #{aisleClassifyId}
+        and delete_flag = #{deleteFlag}
+        and money = #{orderPrice}
+        and operator_type = #{phoneOperator}
+        and shop_id in
+        <foreach collection="ids" open="(" close=")" item="shopId" separator=",">
+            #{shopId}
+        </foreach>
+    </select>
+</mapper>

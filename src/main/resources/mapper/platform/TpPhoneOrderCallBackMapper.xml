@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.TpPhoneOrderCallBackMapper">
+
+    <insert id="saveOrUpdateByPlatformOrderNo">
+        insert into tp_phone_order_call_back(platform_order_no, shop_order_no, order_sn, `status`, message, certificate)
+        values (#{order.platformOrderNo}, #{order.shopOrderNo}, #{order.orderSn}, #{order.status}, #{order.message},
+                #{order.certificate})
+        on duplicate key
+            update shop_order_no = values(shop_order_no),
+                   order_sn      = values(order_sn),
+                   status        = values(status),
+                   message       = values(message),
+                   certificate   = values(certificate);
+    </insert>
+    <insert id="saveBatch">
+        insert into tp_phone_order_call_back(platform_order_no,shop_order_no,order_sn,status,message,certificate)
+        values
+        <foreach collection="tpList" index="index" separator="," item="tp">
+            (#{tp.platformOrderNo},#{tp.shopOrderNo},#{tp.orderSn},
+            #{tp.status},#{tp.message},#{tp.certificate})
+        </foreach>
+    </insert>
+    <insert id="saveBatchShopOrderNoIsNull">
+        insert into tp_phone_order_call_back(platform_order_no,status,message)
+        values
+        <foreach collection="tpListShopOrderNoIsNull" index="index" separator="," item="tp">
+            (#{tp.platformOrderNo},
+            #{tp.status},#{tp.message})
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        update tp_phone_order_call_back
+        set delete_flag = 1
+        <where>
+            <foreach collection="ids" index="index" item="id" separator="or">
+                id = #{id}
+            </foreach>
+        </where>
+    </update>
+    <select id="getBatch" resultType="java.lang.String">
+        select platform_order_no from tp_phone_order_call_back
+        <where>
+            <foreach collection="orderWaitCheckNotNulls" index="index" item="orderWaitCheck" separator="or">
+                platform_order_no = #{orderWaitCheck.platformOrderNo}
+            </foreach>
+        </where>
+    </select>
+
+
+</mapper>

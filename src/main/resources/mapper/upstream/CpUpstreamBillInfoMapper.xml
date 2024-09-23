@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.upstream.CpUpstreamBillInfoMapper">
+
+    <insert id="saveBatch">
+        insert into cp_upstream_bill_info(trader_user_id,trade_no
+        ,`type`, aisle_id, operator, money,balance,last_balance,last_time,status)
+        values
+        <foreach collection="cpUpstreamBillInfos" index="index" separator="," item="cp">
+            (#{cp.traderUserId},#{cp.tradeNo},#{cp.type}, #{cp.aisleId}, #{cp.operator},
+            #{cp.money},#{cp.balance},#{cp.lastBalance},
+            #{cp.lastTime},#{cp.status})
+        </foreach>
+    </insert>
+    <select id="getBatch" resultType="com.push.entity.upstream.CpUpstreamBillInfo">
+        select money,trade_no from cp_upstream_bill_info
+        <where>
+            <foreach collection="platformOrderNos" index="index" separator="or" item="orderNo">
+                trade_no = #{orderNo}
+            </foreach>
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.agent.ShopAgentLogLoginMapper">
+
+    <select id="getShopLoginLog" resultType="com.push.common.webfacade.vo.platform.LoginLogVO">
+        SELECT
+        su.user_name,
+        sl.login_ip,
+        sl.login_status,
+        sl.create_time,
+        sl.update_time
+        FROM
+        shop_agent_log_login sl
+        LEFT JOIN shop_agent_user_info su ON sl.user_id = su.id
+        <where>
+            sl.delete_flag=0
+            <if test="userName != null and userName != ''">
+                and su.user_name like concat('%',#{userName},'%')
+            </if>
+            <if test="loginIp != null and loginIp != ''">
+                and sl.login_ip like concat('%',#{loginIp},'%')
+            </if>
+            <if test="startTime != null">
+                and sl.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and sl.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by sl.create_time desc
+    </select>
+</mapper>

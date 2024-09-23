@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.PhoneOrderTimeOutMapper">
+    <delete id="deleteByOrderStatus">
+        UPDATE phone_order_time_out a
+            join phone_order_record b
+            on a.platform_order_no = b.platform_order_no
+        SET a.delete_flag = 1
+        WHERE b.platform_order_status = 2
+           OR b.platform_order_status = 3
+    </delete>
+    <select id="selectOrderTimeOutList" resultType="com.push.entity.platform.PhoneOrderRecord">
+        select
+        b.*
+        from
+        phone_order_time_out a
+        left join phone_order_record b on b.platform_order_no = a.platform_order_no
+        <where>
+            <if test="platformOrderNo != null and platformOrderNo != ''">
+                and a.platform_order_no = #{platformOrderNo}
+            </if>
+            <if test="upstreamOrderNo != null and upstreamOrderNo != ''">
+                and b.upstream_order_no = #{upstreamOrderNo}
+            </if>
+            <if test="phoneNum != null and phoneNum != ''">
+                and b.phone_num = #{phoneNum}
+            </if>
+            <if test="shopName != null and shopName != ''">
+                and b.shop_name = #{shopName}
+            </if>
+            <if test="upstreamName != null and upstreamName != ''">
+                and b.upstream_name = #{upstreamName}
+            </if>
+            <if test="pushStatus != null and pushStatus != ''">
+                and b.push_status = #{pushStatus}
+            </if>
+            <if test="startTime != null">
+                and b.create_time &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and b.create_time &lt; #{endTime}
+            </if>
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.platform.CpPlatformBillInfoMapper">
+
+
+    <insert id="saveBatch">
+        insert into cp_platform_bill_info(trade_no
+        ,`type`,money,balance,last_balance,last_time,status)
+        values
+        <foreach collection="cpPlatformBillInfos" index="index" separator="," item="cp">
+            (#{cp.tradeNo},#{cp.type},
+            #{cp.money},#{cp.balance},#{cp.lastBalance},
+            #{cp.lastTime},#{cp.status})
+        </foreach>
+    </insert>
+</mapper>

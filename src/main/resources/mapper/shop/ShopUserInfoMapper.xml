@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.push.dao.mapper.shop.ShopUserMapper">
+
+    <sql id="baseSQL">
+        su.id,
+        su.user_name,
+        su.phone_number,
+        su.order_price,
+        su.order_expire,
+        su.frozen_money,
+        su.alarm_number,
+        su.role_id,
+        su.area_code,
+        su.shop_name,
+        su.balance,
+        su.frozen_money,
+        su.rate,
+        su.alarm_number,
+        su.query_site,
+        su.order_price,
+        su.order_expire,
+        su.push_site,
+        su.push_switch,
+        su.push_num,
+        su.app_id,
+        su.app_key,
+        su.white_ip,
+        su.role_id,
+        su.status,
+        sm.name,
+        sm.id as matchClassifyId,
+        su.create_time,
+        su.update_time
+    </sql>
+
+    <select id="selectByIdWithMatch" resultType="com.push.common.webfacade.vo.platform.ShopUserInfoVO">
+        select
+        <include refid="baseSQL"/>
+        from shop_user_info su left join shop_match_classify sm on su.match_classify_id = sm.id
+        where su.id = #{id} and su.delete_flag = #{code}
+    </select>
+    <select id="pageWithMatch" resultType="com.push.common.webfacade.vo.platform.ShopUserInfoVO">
+        select
+        <include refid="baseSQL"/>
+        from shop_user_info su left join shop_match_classify sm on su.match_classify_id = sm.id
+        <where>
+            su.delete_flag = 0
+            <if test="userName != null and userName != ''">
+                and su.user_name like concat ('%',#{userName},'%')
+            </if>
+            <if test="shopName != null and shopName != ''">
+                and su.shop_name like concat ('%',#{shopName},'%')
+            </if>
+            <if test="phoneNumber != null and phoneNumber != ''">
+                and su.phone_number like concat ('%',#{phoneNumber},'%')
+            </if>
+            <if test="startTime != null">
+                and su.create_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                and su.create_time &lt;= #{endTime}
+            </if>
+        </where>
+        order by su.create_time desc
+    </select>
+</mapper>
