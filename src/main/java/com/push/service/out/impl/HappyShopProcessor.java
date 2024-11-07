@@ -122,6 +122,7 @@ public class HappyShopProcessor implements ShopProcessor {
         //向Redis中发送数据
         UpstreamUserInfo upstreamUserInfo = upstreamUserInfoService.getById(phoneOrderRecord.getUpstreamUserId());
 
+        //回调渠道 方法内部是存redis  异步解耦
         upstreamCallBackService.callbackUpstream(upstreamUserInfo, phoneOrderRecord,
                 tpPhoneOrderCallBack1.getOrderSn(), tpPhoneOrderCallBack1.getCertificate(), tpPhoneOrderCallBack1.getStatus());
         redisTemplate.opsForValue().set(RedisConstant.PUSH_ORDER_SHOP_CALL_BACK_STATUS + phoneOrderRecord.getPlatformOrderNo(), "1", 30L, TimeUnit.MINUTES);
