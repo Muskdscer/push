@@ -16,9 +16,7 @@ import java.util.Map;
 /**
  * Description:
  * Create DateTime: 2020/5/21 15:03
- *
- * 
-
+ * 平台管理员手动回调上游 向Redis中发送数据
  */
 @Slf4j
 @RestController

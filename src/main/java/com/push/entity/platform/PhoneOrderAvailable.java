@@ -146,7 +146,7 @@ public class PhoneOrderAvailable extends BaseEntity implements Serializable {
     /**
      * 平台订单状态
      * 0:未使用
-     * 1:已推送
+     * 1:已推送(是指上游给平台的推送)
      * 2:消费完成
      * 3:消费失败
      * 4:订单超时
