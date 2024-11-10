@@ -18,7 +18,7 @@ import java.math.BigDecimal;
 @Data
 public class UpstreamSendOrderBO extends BaseBO {
 
-    //appId,平台为用户分配的,且唯一
+    //appId,平台为用户分配的,且唯一  渠道的appID
     private String appId;
 
     //验签

@@ -43,6 +43,10 @@ public class RabbitMQConsumer {
         log.info("【MQ消费者】超时订单：{}, 是否推送商户成功：{}", mqMessage.getPlatformOrderNo(), hasSend);
 
         if (hasSend) {
+            //成功失败都是终态(PUSH_ORDER_SHOP_CALL_BACK_STATUS有值)  不是终态说明商户已经回调了
+            //没有值 放入超时待检查订单 String PUSH_ORDER_WAIT_CHECK = "push-order:waitCheck";
+            //QueryOrderTask-waitQueryOrderTask去查询
+
             String key = RedisConstant.PUSH_ORDER_SHOP_CALL_BACK_STATUS + mqMessage.getPlatformOrderNo();
 
             //判断商户是否回调

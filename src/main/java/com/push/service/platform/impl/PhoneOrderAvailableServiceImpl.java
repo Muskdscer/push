@@ -76,7 +76,15 @@ public class PhoneOrderAvailableServiceImpl extends ServiceImpl<PhoneOrderAvaila
     @Resource
     private ShopMatchClassifyService shopMatchClassifyService;
 
-
+    //渠道推单过来 根据渠道 通道找商户 拿着所有用户id去查询所有推送配比对象 拿着商户i查ShopPushMatch
+    //渠道推订单过来 String PUSH_ORDER_WAIT_PUSH = "push-order:waitPush";
+    //availableOrder落库
+    //redis队列放phoneOrderWaitPush  待推送订单 String PUSH_ORDER_WAIT_PUSH = "push-order:waitPush";
+    //如果不是慢充 延时队列交换机 String RABBIT_DELAY_EXCHANGE = "push_order_delay_exchange";
+    //如果不是慢充  超时订单延时队列 routing key String RABBIT_DELAY_ORDER_TIME_OUT_ROUTING_KEY = "push_order_time_out_delay_key";
+    //拷贝availableOrder到PhoneOrderRecord   PhoneOrderRecord落库
+    //推送数量  根据商户 运营商 订单价格 推送数量 每一次加一String key = RedisConstant.CURRENT_PUSH_NUM + date + ":" + userInfo.getId() + ":"
+    // + availableOrder.getPhoneOperator() + ":" + availableOrder.getOrderPrice();
     @Override
     @TransactionalWithRollback
     public Boolean saveBatchByAvailableAndSaveBatchByRecord(PhoneOrderAvailable availableOrder, PhoneOrderRecord recordOrder,
@@ -99,7 +107,6 @@ public class PhoneOrderAvailableServiceImpl extends ServiceImpl<PhoneOrderAvaila
                 .stream()
                 .map(ShopUserInfo::getId)
                 .collect(Collectors.toList());*/
-        //拿着所有用户id去查询所有推送配比对象
         List<ShopPushMatch> collect = shopPushMatchMapper.selectByShopIds(ids, DeleteFlagEnum.NOT_DELETE.getCode(),
                 availableOrder.getOrderPrice(), availableOrder.getPhoneOperator(), aisleClassifyId);
         long count = collect.stream().mapToLong(ShopPushMatch::getMatchNum).sum();
@@ -141,7 +148,9 @@ public class PhoneOrderAvailableServiceImpl extends ServiceImpl<PhoneOrderAvaila
                 .setShopCallbackSite(userInfo.getShopCallbackSite());
         //入库操作
         PhoneOrderRecord phoneOrderRecord = BeanUtils.copyPropertiesChaining(availableOrder, PhoneOrderRecord::new);
+        //PhoneOrderAvailable做一次保存
         boolean saveByAvailableOrder = this.save(availableOrder);
+        //PhoneOrderRecord做一次保存
         boolean saveByRecord = phoneOrderRecordService.save(phoneOrderRecord);
         //单日单个用户数据统计
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
@@ -150,7 +159,7 @@ public class PhoneOrderAvailableServiceImpl extends ServiceImpl<PhoneOrderAvaila
         intRedisTemplate.opsForValue().setIfAbsent(key, 0, 2, TimeUnit.DAYS);
         intRedisTemplate.opsForValue().increment(key);
         redisTemplate.opsForList().leftPush(RedisConstant.PUSH_ORDER_WAIT_PUSH, JSON.toJSONString(phoneOrderWaitPush));
-        //发送延时队列   商户id和平台订单号
+        //发送延时队列   商户id和平台订单号  商户appId appkey  querySite查询地址
         if (!RechargeTypeEnum.SLOW.getCode().equals(rechargeType)) {
             rabbitMQService.sendDelayMessage(RabbitMQConstant.RABBIT_DELAY_EXCHANGE,
                     RabbitMQConstant.RABBIT_DELAY_ORDER_TIME_OUT_ROUTING_KEY, mqMessage, getRealOrderExpireTime(availableOrder.getOrderExpireTime()));

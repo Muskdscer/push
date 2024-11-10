@@ -36,6 +36,11 @@ public class BaseShopProcessorImpl implements BaseShopProcessor {
     private ShopCommonProcessor shopCommonProcessor;
 
 
+    //存入 TpPhoneOrderCallBack  CpTpPhoneOrderCallBac
+    //回调渠道 方法内部是存redis  异步解耦
+    // 回调渠道结果放入 待回调渠道订单 String PUSH_ORDER_UP_STREAM_WAIT_CALL_BACK = "push-order:upStreamWaitCallBack";
+    //redis记录商户回调状态 redisTemplate.opsForValue().set(RedisConstant.PUSH_ORDER_SHOP_CALL_BACK_STATUS + phoneOrderRecord.getPlatformOrderNo(),
+    // "1", 30L, TimeUnit.MINUTES);
     @Override
     public String execute(String type, Map<String, Object> paramMap) {
         String param = JSON.toJSONString(paramMap);
@@ -98,6 +103,11 @@ public class BaseShopProcessorImpl implements BaseShopProcessor {
 
         //8、完成校验，进入后置处理
         try {
+            //存入 TpPhoneOrderCallBack  CpTpPhoneOrderCallBack
+            //回调渠道 方法内部是存redis  异步解耦
+            // 回调渠道结果放入 待回调渠道订单 String PUSH_ORDER_UP_STREAM_WAIT_CALL_BACK = "push-order:upStreamWaitCallBack";
+            //redis记录商户回调状态 redisTemplate.opsForValue().set(RedisConstant.PUSH_ORDER_SHOP_CALL_BACK_STATUS + phoneOrderRecord.getPlatformOrderNo(),
+            // "1", 30L, TimeUnit.MINUTES);
             shopProcessor.postProcess(param, phoneOrderRecord);
         } catch (Exception e) {
             log.error("【商户回调】出现异常,商户回调参数:{},异常信息:", param, e);
